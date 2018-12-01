@@ -58,5 +58,5 @@ func main() {
 		fmt.Println(wr.GetQueryResult().Action)
 	})
 
-	log.Fatal("Error happend while starting http server", http.ListenAndServe(":80", r))
+	log.Fatal("Error happend while starting http server", http.ListenAndServe(":443", r))
 }
