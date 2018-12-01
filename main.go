@@ -1,0 +1,49 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"log"
+
+	"com/tarekkma/egyptmetro/station"
+
+	"github.com/go-chi/render"
+	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/jmoiron/sqlx"
+)
+
+func main() {
+	log.Println("Server Started")
+
+	db, err := sqlx.Connect("sqlite3", "file:metro.db?cache=shared")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	station.LoadDateFromDB(db)
+
+	r := mux.NewRouter()
+
+	r.HandleFunc("/from-to/{from}/{to}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		from := vars["from"]
+		to := vars["to"]
+		fmt.Println(from)
+		fmt.Println(to)
+		fromId := station.GetStationIdByName(from)
+		toId := station.GetStationIdByName(to)
+		if fromId == -1 || toId == -1 {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "NOT FOUND")
+		}
+		render.JSON(w, r, station.GoFromTo(fromId, toId))
+	})
+
+	r.HandleFunc("/stations", func(w http.ResponseWriter, r *http.Request) {
+		render.JSON(w, r, station.GetStations())
+	})
+
+	log.Fatal("Error happend while starting http server", http.ListenAndServe(":8080", r))
+}
