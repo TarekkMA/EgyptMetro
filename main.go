@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/sirupsen/logrus"
+	dialogflow "google.golang.org/genproto/googleapis/cloud/dialogflow/v2"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -43,6 +46,16 @@ func main() {
 
 	r.HandleFunc("/stations", func(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, station.GetStations())
+	})
+
+	r.HandleFunc("/webhook", func(w http.ResponseWriter, r *http.Request) {
+		wr := dialogflow.WebhookRequest{}
+		if err = json.NewDecoder(r.Body).Decode(&wr); err != nil {
+			logrus.WithError(err).Error("Couldn't Unmarshal request to jsonpb")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "BAD REQUEST")
+		}
+		fmt.Println(wr.GetQueryResult().Action)
 	})
 
 	log.Fatal("Error happend while starting http server", http.ListenAndServe(":80", r))
