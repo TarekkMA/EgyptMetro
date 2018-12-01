@@ -45,5 +45,5 @@ func main() {
 		render.JSON(w, r, station.GetStations())
 	})
 
-	log.Fatal("Error happend while starting http server", http.ListenAndServe(":8080", r))
+	log.Fatal("Error happend while starting http server", http.ListenAndServe(":80", r))
 }
